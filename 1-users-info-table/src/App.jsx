@@ -1,23 +1,37 @@
 import { useEffect, useState } from "react";
 
+const errorButtonStyle = {
+  width: "48px",
+  height: "48px",
+};
+
 const App = () => {
-  const [users, setUser] = useState([]);
+  const [users, setUsers] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    fetch("https://dummyjson.com/users")
-      .then((res) => res.json())
-      .then((data) => {
-        setUser(data.users);
+    const fetchUsers = async () => {
+      try {
+        const res = await fetch("https://dummyjson.com/users");
+        if (!res.ok) throw new Error("Something went wrong.");
+        const data = await res.json();
+        setUsers(data.users);
+      } catch (err) {
+        setError(err.message);
+      } finally {
         setIsLoading(false);
-        console.log(data.users);
-      });
+      }
+    };
+    fetchUsers();
   }, []);
 
   return (
     <div>
       {isLoading ? (
         <Loader />
+      ) : error ? (
+        <Error error={error} />
       ) : (
         <table className="border-collapse w-full">
           <TableHeader />
@@ -110,6 +124,31 @@ function Loader() {
     <h1 className="text-6xl flex items-center justify-center h-screen">
       Loading...
     </h1>
+  );
+}
+
+function Error({ error }) {
+  return (
+    <div className="flex text-4xl items-center justify-center h-screen gap-4 font-bold text-red-500">
+      <span>
+        <svg
+          style={errorButtonStyle}
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+          strokeWidth={1.5}
+          stroke="currentColor"
+          className="size-6"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z"
+          />
+        </svg>
+      </span>
+      <span>{error}</span>
+    </div>
   );
 }
 
